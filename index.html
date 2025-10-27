@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Dynamic Systems - Staff Intranet</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /*
+        ** Custom styles to achieve the late 90s/early 2000s corporate tech aesthetic
+        */
+        :root {
+            /* Corporate Blue */
+            --uds-blue: #3b5998;
+            /* Light Gray/Silver for 3D elements */
+            --uds-light-gray: #e6e6e6;
+            /* Text White */
+            --uds-white: #ffffff;
+        }
+
+        body {
+            background-color: var(--uds-blue);
+            font-family: 'Verdana', 'Arial', sans-serif;
+            color: #333;
+            /* Ensure body covers full viewport for the "pop out" effect */
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        #app {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Container for the fixed-width 2000s layout - USED ONLY FOR LOGIN SCREEN */
+        .login-container {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: var(--uds-white);
+            border: 1px solid #1c325c;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+        }
+
+        /* Wrapper for the full Intranet View (simulating pop-out to a new application window) */
+        .intranet-main-wrapper {
+            max-width: 1100px; /* Slightly larger to feel like a full application */
+            min-height: 90vh;
+            margin: 20px auto;
+            background-color: var(--uds-white);
+            border: 4px solid var(--uds-blue);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+        }
+        
+        /* Concur System styling (simulating a third-party integrated app) */
+        .concur-wrapper {
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .concur-header {
+            background-color: #2c3e50; /* Darker, modern financial look */
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+        }
+
+        /* Corporate Header Style */
+        .header-bg {
+            background-color: var(--uds-blue);
+            border-bottom: 2px solid #1c325c;
+            padding: 12px 20px;
+        }
+
+        /* 3D Button Style for the 2000s */
+        .btn-2000s {
+            /* Inner shadow for "pressed" effect */
+            box-shadow: inset 0 -3px 0 0 rgba(0, 0, 0, 0.2), 0 1px 1px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(to bottom, #f0f0f0 0%, var(--uds-light-gray) 100%);
+            border: 1px solid #777;
+            transition: all 0.05s ease;
+        }
+        .btn-2000s:hover {
+            background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
+            border-color: #555;
+        }
+        .btn-2000s:active {
+            box-shadow: inset 0 3px 0 0 rgba(0, 0, 0, 0.2);
+            transform: translateY(1px);
+        }
+
+        /* Mimic the logo's text shadow */
+        .logo-text-shadow {
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Style for Intranet Menu Links */
+        .nav-link {
+            display: block;
+            padding: 8px 12px;
+            font-weight: bold;
+            color: #1c325c;
+            border-bottom: 1px solid #ddd;
+            transition: background-color 0.1s;
+        }
+        .nav-link:hover {
+            background-color: #f0f0ff;
+            color: var(--uds-blue);
+        }
+        .nav-link.active {
+            background-color: #ddd;
+            color: var(--uds-blue);
+            border-left: 4px solid var(--uds-blue);
+            padding-left: 8px;
+        }
+
+        /* Custom CSS to draw the geometric logo element */
+        .uds-logo-graphic {
+            display: inline-block;
+            transform: skewX(-15deg); /* Add a slight 3D perspective tilt */
+            margin-right: 10px;
+        }
+        .uds-logo-graphic div {
+            float: left;
+            width: 8px;
+            height: 8px;
+            background-color: var(--uds-white);
+            margin: 1px;
+            box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes progress-bar {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+        }
+        .animate-progress-bar {
+            animation: progress-bar 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Modal Backdrop (Hidden by Default) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+        <!-- Modal Content (styled for the 2000s look) -->
+        <div id="modal-content" class="bg-white p-6 w-full max-w-lg shadow-2xl border-2 border-uds-blue relative rounded-md">
+            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-uds-blue">Modal Title</h3>
+                <button onclick="hideModal()" class="btn-2000s px-2 py-0.5 text-sm font-bold leading-none">X</button>
+            </div>
+            <div id="modal-body" class="text-sm space-y-3">
+                <!-- Content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app" class="flex items-center justify-center">
+        <!-- The content (Login, Loading, or Intranet) will be dynamically loaded here -->
+    </div>
+
+<script>
+    // Global references for modal elements (must be done after body elements are loaded)
+    let modalBackdrop;
+    let modalTitle;
+    let modalBody;
+
+    // --- Application State and Constants ---
+    const LOGIN_CREDENTIALS = {
+        username: 'long.braden01@uds.com', // UPDATED CREDENTIAL
+        password: '3jrcwqua' // UPDATED CREDENTIAL
+    };
+    let currentAuth = null;
+    let currentPage = 'dashboard';
+    
+    let isDataIntegrityComplete = false;
+    
+    // NEW STATE: Concur Expense Data
+    let expenses = [
+        { date: "2025-10-20", description: "Client Dinner (Project Phoenix)", amount: 85.50, status: "Pending", category: "Meals" },
+        { date: "2025-10-15", description: "Domestic Flight (SFO-ORD)", amount: 450.00, status: "Approved", category: "Travel" },
+    ];
+    let expenseReportStatus = {
+        name: "Q4 Business Travel (October)",
+        expensesCount: expenses.length,
+        totalAmount: expenses.reduce((sum, e) => sum + e.amount, 0),
+        status: "Draft",
+    };
+    
+    // NEW STATE: Resource Booking System
+    let bookedResources = [
+        { name: "Executive Conference Room (Floor 5)", time: "10:00 - 11:00 AM", date: "2025-11-01" },
+        { name: "Mobile Projector Unit #2", time: "01:00 - 05:00 PM", date: "2025-11-02" },
+    ];
+
+    const DIRECTORY_DATA = [
+        { name: "Jane Doe", department: "IT & Systems", extension: "210", email: "jdoe@uds.com" },
+        { name: "John Smith", department: "Finance", extension: "305", email: "jsmith@uds.com" },
+        { name: "Alex Chen", department: "R&D / Engineering", extension: "422", email: "achen@uds.com" },
+        { name: "Sarah Connor", department: "HR & Compliance", extension: "101", email: "sconnor@uds.com" },
+        { name: "Mark Rivers", department: "Supply Chain", extension: "512", email: "mrivers@uds.com" },
+    ];
+
+    const NEWS_DATA = [
+        { date: "Oct 25", headline: "Q4 Revenue Projections Exceed Targets by 15%", category: "Finance" },
+        { date: "Oct 24", headline: "Mandatory Data Integrity Training Now Live", category: "Compliance" },
+        { date: "Oct 22", headline: "Phase II Launch of Project Phoenix Commences", category: "Projects" },
+        { date: "Oct 19", headline: "New Travel Expense Reporting System Implemented", category: "HR" },
+    ];
+
+    const PROJECTS_DATA = [
+        { id: "P-450", name: "Cloud Migration Project Phoenix", lead: "A. Chen", status: "85%", priority: "High" },
+        { id: "P-451", name: "Q1 Budget Consolidation", lead: "J. Smith", status: "40%", priority: "Medium" },
+        { id: "P-452", name: "Site-wide Server Upgrade", lead: "J. Doe", status: "10%", priority: "High" },
+        { id: "P-453", name: "Vendor Contract Negotiation (Q4)", lead: "M. Rivers", status: "95%", priority: "Medium" },
+    ];
+
+    const PAGES = {
+        'dashboard': { title: 'Staff Dashboard', content: renderDashboard },
+        'directory': { title: 'Staff Directory', content: renderDirectory },
+        'policies': { title: 'Company Policies', content: renderPolicies },
+        'hr-forms': { title: 'HR Forms & Documents', content: renderHRForms },
+        'projects': { title: 'Active Projects', content: renderProjects },
+        'it-support': { title: 'IT Support & Help Desk', content: renderITSupport },
+        'training': { title: 'UDS Training Modules', content: renderTrainingModules },
+        'news': { title: 'UDS News Feed', content: renderNews },
+        'supply-chain': { title: 'Supply Chain Hub', content: renderSupplyChain },
+        'finance': { title: 'Finance & Budgeting', content: renderFinance },
+        'feedback': { title: 'Client Feedback Portal', content: renderClientFeedback },
+        'security': { title: 'Security & Compliance', content: renderSecurity },
+        'knowledge-base': { title: 'Knowledge Base & Wiki', content: renderKnowledgeBase },
+        'travel': { title: 'Travel & Expenses', content: renderTravel },
+        'resource-booking': { title: 'Resource Booking System', content: renderResourceBooking },
+        // NEW PAGE FOR CONCUR SYSTEM
+        'concur': { title: 'Concur Expense System', content: renderConcurSystem },
+    };
+
+    // --- Utility Functions (including Modal Control) ---
+
+    function setupModalReferences() {
+        modalBackdrop = document.getElementById('modal-backdrop');
+        modalTitle = document.getElementById('modal-title');
+        modalBody = document.getElementById('modal-body');
+    }
+
+    function showModal(title, contentHtml) {
+        if (!modalTitle || !modalBody || !modalBackdrop) setupModalReferences();
+        modalTitle.innerHTML = title;
+        modalBody.innerHTML = contentHtml;
+        modalBackdrop.classList.remove('hidden');
+    }
+
+    function hideModal() {
+        if (!modalBackdrop) setupModalReferences();
+        modalBackdrop.classList.add('hidden');
+        // Re-render the current page to update any list/state (e.g., Resource Booking or Concur)
+        renderIntranet();
+    }
+
+    function handleFormSubmission(event, formName) {
+        event.preventDefault();
+        const confirmationContent = `
+            <p class="text-center text-lg font-semibold text-green-600 mb-3">Request Submitted!</p>
+            <p>Your **${formName}** has been successfully submitted to the relevant department for processing. You will receive an email confirmation shortly.</p>
+            <div class="flex justify-center mt-6">
+                <button onclick="hideModal()" class="btn-2000s px-4 py-2 text-sm text-uds-blue font-bold rounded-md">
+                    Acknowledge
+                </button>
+            </div>
+        `;
+        showModal('Submission Confirmation', confirmationContent);
+    }
+    window.handleFormSubmission = handleFormSubmission; // Expose globally
+
+    /**
+     * Renders the geometric logo graphic composed of white squares.
+     */
+    function renderLogoGraphic(color = 'white') {
+        let html = '<div class="uds-logo-graphic">';
+        const pattern = [5, 4, 3, 2, 1, 0]; // Number of squares per row
+        for (let i = 0; i < pattern.length; i++) {
+            for (let j = 0; j < pattern[i]; j++) {
+                html += `<div style="background-color: ${color};"></div>`;
+            }
+            html += '<div style="clear: both;"></div>'; // New row
+        }
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Renders the Header and Logo section.
+     */
+    function renderHeader() {
+        const userName = currentAuth ? currentAuth.split('@')[0].split('.')[1] || currentAuth.split('@')[0] : 'Guest';
+        const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+        return `
+            <div class="header-bg flex items-center justify-between">
+                <div class="flex items-center">
+                    ${renderLogoGraphic()}
+                    <h1 class="text-4xl font-extrabold text-white logo-text-shadow leading-none">
+                        <div class="text-lg">Unified</div>
+                        <div class="text-2xl mt-[-5px]">Dynamic Systems</div>
+                    </h1>
+                </div>
+                <div class="text-right text-white">
+                    <p class="text-sm font-semibold">Welcome, ${formattedName}!</p>
+                    <button onclick="handleLogout()" class="btn-2000s px-4 py-1 text-xs rounded-md shadow-lg text-uds-blue mt-1">
+                        Log Out
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Renders the sidebar navigation menu.
+     */
+    function renderNavigation() {
+        return `
+            <div class="w-full bg-white border-r border-t border-gray-300">
+                <div class="p-3 bg-gray-200 font-bold text-sm text-gray-700">Intranet Menu</div>
+                ${Object.keys(PAGES)
+                    .filter(key => key !== 'concur') // Exclude Concur from main navigation
+                    .map(key => `
+                    <a href="#" onclick="navigateTo('${key}')" class="nav-link ${currentPage === key ? 'active' : ''}">
+                        ${PAGES[key].title}
+                    </a>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    function completeTraining() {
+        isDataIntegrityComplete = true;
+        hideModal(); 
+    }
+    window.completeTraining = completeTraining;
+
+    function filterDirectory(query) {
+        const listDiv = document.getElementById('directory-list');
+        if (!listDiv) return;
+        const q = query.toLowerCase().trim();
+        const filtered = DIRECTORY_DATA.filter(p =>
+            p.name.toLowerCase().includes(q) ||
+            p.department.toLowerCase().includes(q) ||
+            p.extension.includes(q)
+        );
+
+        listDiv.innerHTML = filtered.length > 0 ? filtered.map(person => `
+            <div class="flex items-center p-3 border-b last:border-b-0 bg-white hover:bg-gray-50">
+                <div class="flex-1 font-semibold">${person.name}</div>
+                <div class="w-1/4 text-sm text-gray-700 hidden sm:block">${person.department}</div>
+                <div class="w-1/6 text-sm font-mono">${person.extension}</div>
+                <a href="mailto:${person.email}" class="w-1/6 text-xs text-blue-600 hover:underline">Email</a>
+            </div>
+        `).join('') : '<p class="text-center italic mt-4 text-gray-500">No staff members found matching your search criteria.</p>';
+    }
+    window.filterDirectory = filterDirectory;
+
+    function launchHRFormModal(formName) {
+        const formContent = `
+            <form onsubmit="handleFormSubmission(event, '${formName}')" class="space-y-4">
+                <p class="text-sm">You are requesting the **${formName}**. Please verify your contact information below.</p>
+                <div class="mb-3">
+                    <label for="form-contact-email" class="block text-xs font-medium text-gray-700">Corporate Email:</label>
+                    <input type="email" id="form-contact-email" value="${currentAuth}" class="w-full p-2 border border-gray-400 rounded-sm bg-gray-100" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="form-details" class="block text-xs font-medium text-gray-700">Reason / Details (if applicable):</label>
+                    <textarea id="form-details" rows="3" class="w-full p-2 border border-gray-400 rounded-sm"></textarea>
+                </div>
+                <button type="submit" class="btn-2000s w-full py-2 text-uds-blue font-bold rounded-md">Submit Request</button>
+            </form>
+        `;
+        showModal(`HR Form Request: ${formName}`, formContent);
+    }
+    window.launchHRFormModal = launchHRFormModal;
+
+
+    // --- NEW CONCUR SYSTEM FUNCTIONS ---
+
+    function addNewExpense(event) {
+        event.preventDefault();
+        const date = document.getElementById('new-exp-date').value;
+        const desc = document.getElementById('new-exp-desc').value;
+        const amount = parseFloat(document.getElementById('new-exp-amount').value);
+        const category = document.getElementById('new-exp-category').value;
+
+        if (date && desc && !isNaN(amount) && amount > 0) {
+            expenses.unshift({
+                date,
+                description: desc,
+                amount,
+                status: "Draft",
+                category
+            });
+            expenseReportStatus.expensesCount = expenses.length;
+            expenseReportStatus.totalAmount += amount;
+            // Rerender the Concur page to show the new expense
+            navigateTo('concur'); 
+            
+            showModal('Expense Added', `<p class="text-center text-green-600">Expense for **$${amount.toFixed(2)}** has been added to your draft report.</p>`);
+        } else {
+            showModal('Error', '<p class="text-center text-red-500">Please ensure all fields are valid and the amount is positive.</p>');
+        }
+    }
+    window.addNewExpense = addNewExpense;
+
+    function submitReport() {
+        expenseReportStatus.status = "Submitted for Approval";
+        showModal('Report Submitted', `<p class="text-center text-lg font-semibold text-green-600 mb-3">Report Submitted!</p><p>Your report **${expenseReportStatus.name}** has been successfully submitted to your manager for approval.</p>`);
+    }
+    window.submitReport = submitReport;
+    
+    function renderConcurSystem() {
+        const total = expenseReportStatus.totalAmount.toFixed(2);
+
+        return `
+            <div class="concur-wrapper p-0 shadow-xl w-full h-full flex flex-col">
+                <div class="concur-header flex justify-between items-center">
+                    <span class="text-xl">UDS | CONCUR Expense Management</span>
+                    <button onclick="navigateTo('travel')" class="btn-2000s px-3 py-1 text-sm text-uds-blue font-bold">
+                        &lt; Return to Intranet
+                    </button>
+                </div>
+                
+                <div class="p-6 flex-1 overflow-y-auto">
+                    <!-- Report Status Overview -->
+                    <div class="bg-white p-4 border border-gray-300 rounded-md shadow-md mb-6 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs text-gray-500">Active Report:</p>
+                            <h3 class="text-2xl font-bold text-gray-800">${expenseReportStatus.name}</h3>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-semibold">Total Expenses:</p>
+                            <p class="text-3xl font-extrabold text-red-700">$${total}</p>
+                            <p class="text-sm mt-1">Status: <span class="font-bold text-orange-600">${expenseReportStatus.status}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <!-- Left Panel: Add New Expense -->
+                        <div class="lg:w-1/3 bg-white p-4 border border-gray-300 rounded-md shadow-lg">
+                            <h4 class="text-lg font-bold mb-3 border-b pb-1 text-uds-blue">Add New Expense</h4>
+                            <form onsubmit="addNewExpense(event)" class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Date:</label>
+                                    <input type="date" id="new-exp-date" class="w-full p-2 border border-gray-400 rounded-sm" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Description:</label>
+                                    <input type="text" id="new-exp-desc" class="w-full p-2 border border-gray-400 rounded-sm" placeholder="Vendor, City, Purpose" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Category:</label>
+                                    <select id="new-exp-category" class="w-full p-2 border border-gray-400 rounded-sm">
+                                        <option>Meals</option>
+                                        <option>Lodging</option>
+                                        <option>Transportation</option>
+                                        <option>Entertainment</option>
+                                        <option>Miscellaneous</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Amount ($):</label>
+                                    <input type="number" step="0.01" min="0.01" id="new-exp-amount" class="w-full p-2 border border-gray-400 rounded-sm" required>
+                                </div>
+                                <button type="submit" class="btn-2000s w-full py-2 bg-green-100 text-green-700 font-bold rounded-md">
+                                    Add to Report
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Right Panel: Expense List & Actions -->
+                        <div class="lg:w-2/3">
+                            <h4 class="text-lg font-bold mb-3 border-b pb-1 flex justify-between items-center">
+                                Expense Line Items (${expenses.length})
+                                <button onclick="submitReport()" ${expenseReportStatus.status !== 'Draft' ? 'disabled' : ''} class="btn-2000s px-4 py-1 text-sm ${expenseReportStatus.status !== 'Draft' ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-200 text-uds-blue font-bold'}">
+                                    ${expenseReportStatus.status === 'Draft' ? 'Submit Report' : expenseReportStatus.status}
+                                </button>
+                            </h4>
+                            <div class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                                ${expenses.map((e, index) => `
+                                    <div class="flex justify-between items-center p-3 border border-gray-200 rounded-md bg-white shadow-sm">
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">${e.description}</p>
+                                            <p class="text-xs text-gray-500">${e.date} | ${e.category} | Status: ${e.status}</p>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="font-bold text-lg text-red-700">$${e.amount.toFixed(2)}</p>
+                                            <button onclick="showModal('Receipt Upload', '<p class=\\"text-center\\">This simulates opening the receipt upload interface for the expense of $${e.amount.toFixed(2)}.</p>')" class="text-xs text-blue-600 hover:underline">Attach Receipt</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <p class="text-xs text-gray-500 mt-3 italic">Total items: ${expenses.length}. Unsubmitted total: $${total}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function launchConcurSystem() {
+        // Show a Concur-specific loading modal/overlay
+        showModal('Loading Concur Expense System...', `
+            <div class="flex flex-col items-center p-8">
+                <div class="text-gray-800 text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-blue-600 mr-2">C</span>ONCUR | Secure Single Sign-On
+                </div>
+                <div class="w-64 bg-gray-300 border border-gray-400 rounded-full h-4 overflow-hidden">
+                    <div class="h-full bg-blue-600 w-1/4 animate-progress-bar" style="animation-duration: 2.5s;"></div>
+                </div>
+                <p class="mt-4 text-sm text-gray-600">Verifying SSO credentials and loading expense data...</p>
+            </div>
+        `);
+
+        // Simulate loading time
+        setTimeout(() => {
+            hideModal(); // Hide the modal and triggers a re-render
+            navigateTo('concur'); // Navigate to the new Concur page
+        }, 2500); // 2.5 second delay
+    }
+    window.launchConcurSystem = launchConcurSystem;
+
+
+    // --- Content Page Rendering Functions (Skipping unchanged functions for brevity) ---
+    
+    function renderDashboard() {
+        const userName = currentAuth ? currentAuth.split('@')[0].split('.')[1] || currentAuth.split('@')[0] : 'Team Member';
+        const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Welcome, ${formattedName}!</h2>
+            <div class="p-4 bg-gray-100 border border-gray-300 rounded-md">
+                <p class="mb-2 font-bold text-lg text-uds-blue">System Status: <span class="text-green-600">All Systems Online</span></p>
+                <p class="text-sm">Last update: ${new Date().toLocaleTimeString()} on ${new Date().toLocaleDateString()}.</p>
+                <p class="mt-4">This is your centralized hub for all internal resources. Use the navigation panel on the left to access company news, employee directories, and documentation.</p>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-xl font-semibold mb-3 border-b-2 pb-1">Quick Links</h3>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><a href="#" onclick="navigateTo('policies')" class="text-blue-600 hover:underline">View the 2024 Employee Handbook</a></li>
+                    <li><a href="#" onclick="navigateTo('directory')" class="text-blue-600 hover:underline">Find a colleague in the Staff Directory</a></li>
+                    <li><a href="#" onclick="navigateTo('projects')" class="text-blue-600 hover:underline">Check current **Project Status**</a></li>
+                    <li><a href="#" onclick="navigateTo('hr-forms')" class="text-blue-600 hover:underline">Access **HR Forms** and documents</a></li>
+                    <li><a href="#" onclick="navigateTo('it-support')" class="text-blue-600 hover:underline">Submit an **IT Help Desk** ticket</a></li>
+                    <li><a href="#" onclick="navigateTo('training')" class="text-blue-600 hover:underline">Access **Required Training** Modules</a></li>
+                    <li><a href="#" onclick="navigateTo('finance')" class="text-blue-600 hover:underline">Access the **Budgeting & ROI** Tools</a></li>
+                    <li><a href="#" onclick="navigateTo('knowledge-base')" class="text-blue-600 hover:underline">Search the **UDS Knowledge Base**</a></li>
+                </ul>
+            </div>
+        `;
+    }
+    
+    function renderDirectory() {
+        const initialList = DIRECTORY_DATA.map(person => `
+            <div class="flex items-center p-3 border-b last:border-b-0 bg-white hover:bg-gray-50">
+                <div class="flex-1 font-semibold">${person.name}</div>
+                <div class="w-1/4 text-sm text-gray-700 hidden sm:block">${person.department}</div>
+                <div class="w-1/6 text-sm font-mono">${person.extension}</div>
+                <a href="mailto:${person.email}" class="w-1/6 text-xs text-blue-600 hover:underline">Email</a>
+            </div>
+        `).join('');
+
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Staff Directory</h2>
+            <p class="mb-4">Use the search bar below to quickly find contact information and extensions.</p>
+
+            <div class="p-3 mb-6 bg-gray-100 border border-gray-300 rounded-md flex">
+                <input type="text" id="directory-search-input" placeholder="Search by Name, Department, or Extension"
+                       oninput="filterDirectory(this.value)"
+                       class="w-full p-2 border border-gray-400 rounded-sm text-sm flex-grow mr-3">
+            </div>
+
+            <div class="font-bold text-sm text-uds-blue flex items-center p-3 border-b-2 border-uds-blue/50 bg-gray-200 rounded-t-md">
+                <div class="flex-1">Name</div>
+                <div class="w-1/4 hidden sm:block">Department</div>
+                <div class="w-1/6">Extension</div>
+                <div class="w-1/6">Contact</div>
+            </div>
+
+            <div id="directory-list" class="border border-gray-300 rounded-b-md overflow-hidden">
+                ${initialList}
+            </div>
+        `;
+    }
+
+    function renderPolicies() {
+        const policies = [
+            { title: "Employee Handbook (2024 Edition)", version: "v1.2", date: "2024-01-01", category: "HR" },
+            { title: "Data Security and Compliance Protocol", version: "v4.0", date: "2025-09-15", category: "Security" },
+            { title: "Remote Work and Hybrid Schedule", version: "v2.1", date: "2024-06-01", category: "HR" },
+            { title: "Asset Management Guidelines", version: "v1.0", date: "2025-10-10", category: "IT" },
+        ];
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Company Policies</h2>
+            <p class="mb-4">Access the latest official policy documents. Please ensure compliance with the most recent versions.</p>
+
+            <div class="space-y-3">
+                ${policies.map(p => `
+                    <div class="p-4 border border-gray-300 rounded-md bg-white flex justify-between items-center shadow-sm">
+                        <div>
+                            <p class="font-bold text-uds-blue">${p.title}</p>
+                            <p class="text-xs text-gray-600">Version: ${p.version} | Last Updated: ${p.date}</p>
+                        </div>
+                        <button onclick="showModal('Viewing Policy: ${p.title}', '<p>This is a simulated view of the full policy document. Please refer to the official UDS document repository for the complete PDF.</p><p class=\\"mt-4 text-center\\"><a href=\\"#\\" class=\\"text-blue-600 hover:underline\\">Download PDF</a></p>')" class="btn-2000s px-3 py-1 text-sm font-semibold">
+                            View Document
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function renderHRForms() {
+        const forms = [
+            { name: "Benefit Enrollment/Change Form", type: "Benefits", description: "Update your health, dental, and vision coverage." },
+            { name: "Time Off Request (Vacation/Sick)", type: "Leave", description: "Submit requests for paid and unpaid time off." },
+            { name: "Employee Address Change", type: "Personal", description: "Update your mailing address and emergency contact info." },
+        ];
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">HR Forms & Documents</h2>
+            <p class="mb-4">Quickly request or submit common Human Resources forms directly through the portal.</p>
+
+            <div class="space-y-4">
+                ${forms.map(f => `
+                    <div class="p-4 border border-gray-300 rounded-md bg-white shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <p class="font-bold text-lg text-gray-800">${f.name}</p>
+                            <span class="text-xs font-semibold px-2 py-0.5 bg-gray-200 rounded">${f.type}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 my-2">${f.description}</p>
+                        <button onclick="launchHRFormModal('${f.name}')" class="btn-2000s px-3 py-1 text-sm text-uds-blue font-semibold mt-1">
+                            Request / Start Form
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function renderProjects() {
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Active Projects</h2>
+            <p class="mb-4">A real-time overview of key projects and their current status metrics across the organization.</p>
+
+            <div class="overflow-x-auto border border-gray-300 rounded-md">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-uds-blue uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-uds-blue uppercase tracking-wider">Project Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-uds-blue uppercase tracking-wider">Lead</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-uds-blue uppercase tracking-wider">Priority</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-uds-blue uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${PROJECTS_DATA.map(p => `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.id}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${p.name}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${p.lead}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${p.priority === 'High' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
+                                        ${p.priority}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-green-600 h-2.5 rounded-full" style="width: ${p.status}"></div>
+                                    </div>
+                                    <span class="text-xs mt-1 block">${p.status} Complete</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-xs text-gray-500">Note: Data is updated nightly at 23:00 EST.</p>
+        `;
+    }
+
+    function renderITSupport() {
+        const categories = ["Hardware/Equipment", "Software/Application Access", "Network Connectivity", "Password Reset", "Other"];
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">IT Support & Help Desk</h2>
+            <p class="mb-4">Use this form to submit a new IT support ticket. For urgent system-down issues, please call extension **210**.</p>
+
+            <div class="p-6 border border-gray-300 rounded-md shadow-lg bg-gray-50 max-w-lg">
+                <form onsubmit="handleFormSubmission(event, 'IT Support Ticket')">
+                    <div class="mb-3">
+                        <label for="it-category" class="block text-xs font-medium text-gray-700">Issue Category:</label>
+                        <select id="it-category" class="w-full p-2 border border-gray-400 rounded-sm">
+                            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="it-subject" class="block text-xs font-medium text-gray-700">Subject / Summary:</label>
+                        <input type="text" id="it-subject" class="w-full p-2 border border-gray-400 rounded-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="it-details" class="block text-xs font-medium text-gray-700">Detailed Description:</label>
+                        <textarea id="it-details" rows="4" class="w-full p-2 border border-gray-400 rounded-sm" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-2000s w-full py-2 text-uds-blue font-bold rounded-md">Submit Ticket</button>
+                </form>
+            </div>
+        `;
+    }
+
+    function renderTrainingModules() {
+        const trainingStatus = isDataIntegrityComplete ? 
+            '<span class="text-green-600 font-bold">Complete (Mandatory)</span>' : 
+            '<span class="text-red-600 font-bold">Pending (Mandatory)</span>';
+        
+        const completionButton = isDataIntegrityComplete ? '' : `
+            <button onclick="showModal('Complete Data Integrity Training', '<p>By clicking \\"Confirm Completion,\\" you certify that you have reviewed the entire Data Integrity & Security module and understand the compliance requirements.</p><div class=\\"mt-4 text-center\\"><button onclick=\\"completeTraining()\\" class=\\"btn-2000s px-4 py-2 text-sm text-green-800 font-bold rounded-md\\">Confirm Completion</button></div>')" class="btn-2000s px-3 py-1 text-sm font-semibold text-green-700">
+                Mark as Complete
+            </button>
+        `;
+
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">UDS Training Modules</h2>
+            <p class="mb-4">Access your mandatory compliance training and optional professional development courses.</p>
+
+            <div class="space-y-4">
+                <div class="p-4 border-l-4 ${isDataIntegrityComplete ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} border rounded-md shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-lg text-gray-800">Data Integrity & Security (2025)</p>
+                        <p class="text-sm text-gray-600">Status: ${trainingStatus}</p>
+                    </div>
+                    ${completionButton}
+                </div>
+                
+                <div class="p-4 border-l-4 border-gray-500 bg-gray-50 border rounded-md shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-lg text-gray-800">Advanced Project Management (Optional)</p>
+                        <p class="text-sm text-gray-600">Status: Elective</p>
+                    </div>
+                    <button class="btn-2000s px-3 py-1 text-sm font-semibold">
+                        Start Course
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderNews() {
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">UDS News Feed</h2>
+            <p class="mb-4">The latest announcements and key updates from across the organization.</p>
+
+            <div class="space-y-4">
+                ${NEWS_DATA.map(news => `
+                    <div class="p-4 border-l-4 border-uds-blue bg-white shadow-md rounded-md">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-semibold px-2 py-0.5 bg-gray-200 rounded">${news.category}</span>
+                            <span class="text-xs text-gray-500">${news.date}, 2025</span>
+                        </div>
+                        <p class="text-lg font-bold text-gray-800">${news.headline}</p>
+                        <a href="#" onclick="showModal('News Headline', '<p>${news.headline}</p><p class=\\"mt-3 text-sm italic text-gray-600\\">Full article text is available in the internal newsletter archives.</p>')" class="text-sm text-blue-600 hover:underline mt-1 inline-block">Read More...</a>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function renderSupplyChain() {
+        const metrics = [
+            { label: "On-Time Delivery Rate", value: "98.5%", trend: "up", color: "text-green-600" },
+            { label: "Inventory Turnover Ratio", value: "6.2x", trend: "up", color: "text-green-600" },
+            { label: "Supplier Risk Score", value: "Low (1.8/10)", trend: "down", color: "text-red-600" },
+        ];
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Supply Chain Hub</h2>
+            <p class="mb-4">Real-time status of logistics, inventory, and vendor performance.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                ${metrics.map(m => `
+                    <div class="p-4 bg-gray-100 border border-gray-300 rounded-md shadow-md text-center">
+                        <p class="text-3xl font-bold ${m.color}">${m.value}</p>
+                        <p class="text-sm text-gray-600">${m.label}</p>
+                        <p class="text-xs ${m.trend === 'up' ? 'text-green-600' : 'text-red-600'} mt-1">Trend: ${m.trend === 'up' ? 'Positive ▲' : 'Decreasing ▼'}</p>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <h3 class="text-xl font-semibold mb-3 border-b pb-1">Incoming Shipment Status</h3>
+            <div class="border border-gray-300 rounded-md overflow-hidden">
+                <div class="flex font-bold text-sm text-uds-blue items-center p-3 border-b-2 border-uds-blue/50 bg-gray-200">
+                    <div class="w-1/4">Tracking ID</div>
+                    <div class="w-1/2">Description</div>
+                    <div class="w-1/4 text-right">ETA</div>
+                </div>
+                <div class="p-3 flex items-center bg-white border-b hover:bg-gray-50">
+                    <div class="w-1/4 text-sm font-mono">T9832A</div>
+                    <div class="w-1/2 text-sm text-gray-700">Q4 Component Batch (Europe)</div>
+                    <div class="w-1/4 text-sm text-right text-orange-600">4 Days</div>
+                </div>
+                <div class="p-3 flex items-center bg-white hover:bg-gray-50">
+                    <div class="w-1/4 text-sm font-mono">T9833B</div>
+                    <div class="w-1/2 text-sm text-gray-700">New R&D Equipment</div>
+                    <div class="w-1/4 text-sm text-right text-green-600">Today</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFinance() {
+        const data = {
+            budgetUtilization: "88%",
+            q3Revenue: "$15.4M",
+            roi: "1.7x"
+        };
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Finance & Budgeting</h2>
+            <p class="mb-4">Access official financial reports, current budget utilization, and submit non-travel expenses.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-md shadow-md">
+                    <p class="text-xs text-gray-600">YTD Budget Utilization</p>
+                    <p class="text-3xl font-bold text-uds-blue">${data.budgetUtilization}</p>
+                </div>
+                <div class="p-4 bg-green-50 border border-green-200 rounded-md shadow-md">
+                    <p class="text-xs text-gray-600">Q3 Total Revenue</p>
+                    <p class="text-3xl font-bold text-green-700">${data.q3Revenue}</p>
+                </div>
+                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md shadow-md">
+                    <p class="text-xs text-gray-600">Average Project ROI</p>
+                    <p class="text-3xl font-bold text-yellow-700">${data.roi}</p>
+                </div>
+            </div>
+            
+            <h3 class="text-xl font-semibold mb-3 border-b pb-1">Financial Operations</h3>
+            <div class="space-y-2">
+                <button onclick="handleFormSubmission(event, 'Non-Travel Expense Report')" class="btn-2000s w-full text-left p-3 text-sm font-semibold text-gray-700 hover:bg-yellow-100">
+                    Submit Non-Travel Expense Report (Local Purchases)
+                </button>
+                <a href="#" onclick="showModal('Financial Report Access', '<p>You need appropriate access credentials to view the full quarterly report. Please contact extension 305.</p>')" class="btn-2000s w-full text-left p-3 text-sm font-semibold text-gray-700 block hover:bg-blue-100">
+                    View Quarterly Financial Statements
+                </a>
+            </div>
+        `;
+    }
+
+    function renderClientFeedback() {
+        const nps = "75";
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Client Feedback Portal</h2>
+            <p class="mb-4">Monitor and analyze Net Promoter Scores (NPS) and review recent client comments.</p>
+
+            <div class="p-6 text-center bg-gray-100 border border-gray-300 rounded-md shadow-lg mb-6">
+                <p class="text-sm font-bold text-gray-600">Current Rolling 30-Day Net Promoter Score (NPS)</p>
+                <p class="text-7xl font-extrabold text-green-600 mt-2">${nps}</p>
+                <p class="text-lg font-semibold text-gray-700">Excellent - World Class Performance</p>
+            </div>
+            
+            <h3 class="text-xl font-semibold mb-3 border-b pb-1">Recent Comments Summary</h3>
+            <div class="space-y-3">
+                <div class="p-3 border-l-4 border-green-600 bg-white shadow-sm rounded-md">
+                    <p class="text-sm italic">"The speed of deployment on Project X exceeded our expectations. Truly dynamic."</p>
+                    <p class="text-xs font-bold text-gray-500 mt-1">Promoter (Score: 10/10) - Oct 23</p>
+                </div>
+                <div class="p-3 border-l-4 border-red-600 bg-white shadow-sm rounded-md">
+                    <p class="text-sm italic">"Initial communication handover was difficult. Needs improvement."</p>
+                    <p class="text-xs font-bold text-gray-500 mt-1">Detractor (Score: 3/10) - Oct 21</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSecurity() {
+        const complianceItems = [
+            { item: "Firewall Configuration Check", status: "Pass", severity: "Low" },
+            { item: "Annual Security Audit (Q3)", status: "Pass", severity: "Low" },
+            { item: "VPN Client Update Status", status: "Action Required", severity: "High" },
+            { item: "Data Retention Policy Review", status: "Pending", severity: "Medium" },
+        ];
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Security & Compliance</h2>
+            <p class="mb-4">Your central resource for compliance documents, security alerts, and required actions.</p>
+
+            <h3 class="text-xl font-semibold mb-3 border-b pb-1">Compliance Status Overview</h3>
+            <div class="space-y-3">
+                ${complianceItems.map(i => `
+                    <div class="p-3 border rounded-md bg-white flex justify-between items-center shadow-sm ${i.status === 'Action Required' ? 'border-red-500 bg-red-50' : 'border-gray-300'}">
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">${i.item}</p>
+                            <p class="text-xs text-gray-600">Severity: <span class="font-semibold ${i.severity === 'High' ? 'text-red-700' : 'text-orange-700'}">${i.severity}</span></p>
+                        </div>
+                        <span class="text-sm font-bold ${i.status === 'Pass' ? 'text-green-600' : i.status === 'Action Required' ? 'text-red-600' : 'text-orange-600'}">${i.status}</span>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 class="font-bold text-uds-blue">Security Alert: VPN Client Update</h3>
+                <p class="text-sm mt-1">All staff must update to VPN Client v3.2 by **October 30th**. This is a mandatory action to maintain network access. See **Knowledge Base KB-015**.</p>
+            </div>
+        `;
+    }
+    
+    function showArticleDetailsModal(title, content) {
+        const articleContent = `
+            <p class="text-sm font-light text-gray-600 mb-3 border-b pb-2">Category: Internal Systems</p>
+            <p>${content}</p>
+            <div class="flex justify-center mt-6">
+                <button onclick="hideModal()" class="btn-2000s px-4 py-2 text-sm text-uds-blue font-bold rounded-md">
+                    Close Article
+                </button>
+            </div>
+        `;
+        showModal(title, articleContent);
+    }
+    window.showArticleDetailsModal = showArticleDetailsModal;
+
+    function renderKnowledgeBase() {
+        const articles = [
+            { id: 'KB-001', title: "Protocol for System Shutdown (Emergency)", summary: "Step-by-step guide for secure, temporary system disengagement.", content: "In the event of a Code Red alert, all department heads must follow the 10-step shutdown procedure outlined in the appendix. Data integrity is paramount during this process." },
+            { id: 'KB-015', title: "Setting up the New VPN Client (2025)", summary: "Installation guide for the Unified VPN Client v3.2.", content: "Download the client from the IT drive. Use your corporate credentials. Ensure two-factor authentication is configured before first connection." },
+            { id: 'KB-033', title: "Q&A: Annual Performance Review Process", summary: "A brief guide to the criteria and timeline for the Q4 review cycle.", content: "All reviews are based on Dynamic Goal Setting (DGS) metrics established at the start of the fiscal year. Submissions are due December 1st." },
+        ];
+
+        const filterArticles = (query) => {
+            const resultsDiv = document.getElementById('kb-results');
+            if (!resultsDiv) return;
+            const q = query.toLowerCase().trim();
+            const filtered = articles.filter(a => 
+                a.title.toLowerCase().includes(q) || a.summary.toLowerCase().includes(q)
+            );
+
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-center italic mt-4">No articles found matching your query.</p>';
+            } else {
+                resultsDiv.innerHTML = filtered.map(a => `
+                    <div class="p-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 cursor-pointer" onclick="showArticleDetailsModal('${a.title}', '${a.content.replace(/'/g, "\\'")}')">
+                        <div class="font-bold text-uds-blue">${a.title} <span class="text-xs text-gray-400 ml-2">(${a.id})</span></div>
+                        <p class="text-sm text-gray-600">${a.summary}</p>
+                    </div>
+                `).join('');
+            }
+        };
+        window.filterArticles = filterArticles;
+
+        let initialResults = articles.map(a => `
+            <div class="p-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 cursor-pointer" onclick="showArticleDetailsModal('${a.title}', '${a.content.replace(/'/g, "\\'")}')">
+                <div class="font-bold text-uds-blue">${a.title} <span class="text-xs text-gray-400 ml-2">(${a.id})</span></div>
+                <p class="text-sm text-gray-600">${a.summary}</p>
+            </div>
+        `).join('');
+
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">UDS Knowledge Base & Wiki</h2>
+            <p class="mb-4">Search the official repository of internal documentation and technical articles.</p>
+            
+            <div class="p-3 mb-6 bg-gray-100 border border-gray-300 rounded-md flex">
+                <input type="text" id="kb-search-input" placeholder="Enter keywords (e.g., 'VPN', 'Shutdown')" 
+                       oninput="filterArticles(this.value)" 
+                       class="w-full p-2 border border-gray-400 rounded-sm text-sm flex-grow mr-3">
+                <button onclick="filterArticles(document.getElementById('kb-search-input').value)" class="btn-2000s px-4 py-2 text-sm text-uds-blue font-bold rounded-md">Search</button>
+            </div>
+            
+            <div id="kb-results" class="space-y-3">
+                ${initialResults}
+            </div>
+        `;
+    }
+    
+    function launchTravelRequestModal() {
+        const formContent = `
+            <form onsubmit="handleFormSubmission(event, 'Travel Request')">
+                <div class="mb-3">
+                    <label for="travel-destination" class="block text-xs font-medium text-gray-700">Destination City/Client:</label>
+                    <input type="text" id="travel-destination" class="w-full p-2 border border-gray-400 rounded-sm" required>
+                </div>
+                <div class="mb-3 flex space-x-4">
+                    <div class="flex-1">
+                        <label for="travel-start" class="block text-xs font-medium text-gray-700">Departure Date:</label>
+                        <input type="date" id="travel-start" class="w-full p-2 border border-gray-400 rounded-sm" required>
+                    </div>
+                    <div class="flex-1">
+                        <label for="travel-end" class="block text-xs font-medium text-gray-700">Return Date:</label>
+                        <input type="date" id="travel-end" class="w-full p-2 border border-gray-400 rounded-sm" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="travel-purpose" class="block text-xs font-medium text-gray-700">Purpose of Travel:</label>
+                    <textarea id="travel-purpose" rows="3" class="w-full p-2 border border-gray-400 rounded-sm" required></textarea>
+                </div>
+                <button type="submit" class="btn-2000s w-full py-2 text-uds-blue font-bold rounded-md">Submit Travel Request</button>
+            </form>
+        `;
+        showModal('Business Travel Authorization Request', formContent);
+    }
+    window.launchTravelRequestModal = launchTravelRequestModal;
+
+    function renderTravel() {
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Travel & Expenses</h2>
+            <p class="mb-4">Centralized hub for all travel requests, expense reporting, and related policies.</p>
+            
+            <div class="space-y-4">
+                <div class="border p-3 rounded-md shadow-sm bg-blue-50/70 border-blue-200">
+                    <h3 class="text-lg font-semibold text-uds-blue">New Travel Authorization</h3>
+                    <p class="text-sm mt-1">Required for all domestic and international business travel prior to booking.</p>
+                    <button onclick="launchTravelRequestModal()" class="btn-2000s px-3 py-1 mt-2 text-sm text-blue-800 font-semibold rounded-md">
+                        Start New Request
+                    </button>
+                </div>
+                <div class="border p-3 rounded-md shadow-sm bg-green-50/70 border-green-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Expense Report Submission (CONCUR)</h3>
+                    <p class="text-sm mt-1">Access the integrated Concur system to track and submit your travel expenses.</p>
+                    <a href="#" onclick="launchConcurSystem()" class="btn-2000s px-3 py-1 mt-2 text-sm text-blue-800 font-semibold rounded-md inline-block">Go to Concur System</a>
+                </div>
+                <div class="border p-3 rounded-md shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800">UDS Expense Policy 2.0</h3>
+                    <p class="text-sm mt-1">Review current per diem limits, receipt requirements, and approved vendors for travel. <a href="#" class="text-blue-600 hover:underline">Download Policy PDF</a></p>
+                </div>
+            </div>
+        `;
+    }
+
+    function bookResource(event) {
+        event.preventDefault();
+        const resourceName = document.getElementById('book-resource').value;
+        const timeSlot = document.getElementById('book-time').value;
+        const dateSlot = document.getElementById('book-date').value;
+        
+        if (!resourceName || !timeSlot || !dateSlot) {
+            showModal('Booking Error', '<p class="text-center text-red-500">Please fill out all fields before attempting to book.</p>');
+            return;
+        }
+
+        bookedResources.push({
+            name: resourceName,
+            time: timeSlot,
+            date: dateSlot
+        });
+
+        const confirmationContent = `
+            <p class="text-center text-lg font-semibold text-green-600 mb-3">Booking Confirmed!</p>
+            <p>You have successfully reserved **${resourceName}** for **${dateSlot}** from **${timeSlot}**.</p>
+            <div class="flex justify-center mt-6">
+                <button onclick="hideModal()" class="btn-2000s px-4 py-2 text-sm text-uds-blue font-bold rounded-md">
+                    View My Bookings
+                </button>
+            </div>
+        `;
+        showModal('Booking Success', confirmationContent);
+    }
+    window.bookResource = bookResource;
+
+    function renderResourceBooking() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        const sortedBookings = bookedResources.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        return `
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-700">Resource Booking System</h2>
+            <p class="mb-4">Reserve conference rooms, A/V equipment, and internal project servers.</p>
+            
+            <div class="flex flex-col md:flex-row gap-6">
+                
+                <!-- Booking Form -->
+                <div class="md:w-1/2 p-4 border border-gray-300 rounded-md shadow-lg bg-gray-50">
+                    <h3 class="text-lg font-bold text-uds-blue mb-3">Make a New Booking</h3>
+                    <form onsubmit="bookResource(event)" class="space-y-3">
+                        <div>
+                            <label for="book-resource" class="block text-xs font-medium text-gray-700">Resource:</label>
+                            <select id="book-resource" class="w-full p-2 border border-gray-400 rounded-sm">
+                                <option value="Executive Conference Room (Floor 5)">Executive Conference Room (Floor 5)</option>
+                                <option value="Project Room Alpha (Floor 3)">Project Room Alpha (Floor 3)</option>
+                                <option value="Mobile Projector Unit #2">Mobile Projector Unit #2</option>
+                                <option value="VR/Simulation Lab">VR/Simulation Lab</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="book-date" class="block text-xs font-medium text-gray-700">Date:</label>
+                            <input type="date" id="book-date" class="w-full p-2 border border-gray-400 rounded-sm" value="${today}" required>
+                        </div>
+                        <div>
+                            <label for="book-time" class="block text-xs font-medium text-gray-700">Time Slot:</label>
+                            <select id="book-time" class="w-full p-2 border border-gray-400 rounded-sm">
+                                <option>09:00 - 10:00 AM</option>
+                                <option>10:00 - 11:00 AM</option>
+                                <option>01:00 - 02:00 PM</option>
+                                <option>02:00 - 05:00 PM</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-2000s w-full py-2 text-uds-blue font-bold rounded-md mt-4">
+                            Reserve
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Active Bookings List -->
+                <div class="md:w-1/2">
+                    <h3 class="text-xl font-bold mb-3 border-b pb-1 text-gray-700">Active Bookings</h3>
+                    <div class="space-y-3 max-h-64 overflow-y-auto p-2 border border-gray-300 bg-white">
+                        ${sortedBookings.length > 0 ? sortedBookings.map(b => `
+                            <div class="p-2 border-l-4 border-uds-blue bg-blue-50/50">
+                                <p class="font-semibold text-gray-800 text-sm">${b.name}</p>
+                                <p class="text-xs text-gray-600">${b.date} | ${b.time}</p>
+                            </div>
+                        `).join('') : '<p class="italic text-gray-500 text-sm p-4 text-center">No current resource reservations.</p>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // --- View Rendering Logic ---
+    
+    function renderLoadingScreen() {
+        document.getElementById('app').innerHTML = `
+            <div class="login-container flex flex-col items-center justify-center p-12 bg-gray-100 border-2 border-uds-blue shadow-2xl">
+                <div class="text-uds-blue text-3xl font-bold mb-6 flex items-center animate-pulse">
+                    ${renderLogoGraphic('#3b5998')}
+                    <div class="mt-[-5px]">UDS | Loading Portal...</div>
+                </div>
+                <div class="w-64 bg-gray-300 border border-gray-400 rounded-full h-4 overflow-hidden">
+                    <div class="h-full bg-uds-blue animate-progress-bar"></div>
+                </div>
+                <p class="mt-4 text-sm text-gray-600">Establishing Secure Session & Loading Dynamic Modules...</p>
+            </div>
+        `;
+    }
+
+
+    function renderIntranet() {
+        const contentFunction = PAGES[currentPage] ? PAGES[currentPage].content : renderDashboard;
+        
+        // Concur page takes the full content area, no side nav
+        const isConcur = currentPage === 'concur';
+        
+        document.getElementById('app').innerHTML = `
+            <div class="intranet-main-wrapper flex flex-col w-full h-full">
+                ${renderHeader()}
+                <!-- Main Content Area (Sidebar + Body) -->
+                <div class="flex flex-1 overflow-hidden">
+                    <!-- Left Sidebar (Navigation) -->
+                    ${!isConcur ? `
+                        <nav class="w-64 flex-shrink-0 bg-gray-100 border-r border-gray-300 overflow-y-auto">
+                            ${renderNavigation()}
+                        </nav>
+                    ` : ''}
+
+                    <!-- Main Body Content -->
+                    <main class="flex-1 p-${isConcur ? '0' : '6'} overflow-y-auto">
+                        ${contentFunction()}
+                    </main>
+                </div>
+                <!-- Footer -->
+                <div class="bg-gray-100 border-t border-gray-300 p-2 text-center text-xs text-gray-600">
+                    &copy; ${new Date().getFullYear()} Unified Dynamic Systems. All Rights Reserved.
+                </div>
+            </div>
+        `;
+    }
+
+    function renderLogin() {
+        document.getElementById('app').innerHTML = `
+            <div class="login-container p-8 flex flex-col items-center justify-center">
+                <!-- Logo with '90s/00s Text Shadow -->
+                <div class="text-center mb-6">
+                    ${renderLogoGraphic('#3b5998')}
+                    <h1 class="text-3xl font-extrabold text-uds-blue logo-text-shadow leading-none">
+                        <div class="text-base">Unified</div>
+                        <div class="text-xl mt-[-5px]">Dynamic Systems</div>
+                    </h1>
+                    <p class="text-gray-500 text-sm mt-2">Internal Staff Access Portal</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="w-full">
+                    <div class="mb-4">
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username:</label>
+                        <input type="text" id="username" name="username" class="w-full p-2 border border-gray-400 rounded-sm focus:border-uds-blue focus:ring focus:ring-blue-200" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password:</label>
+                        <input type="password" id="password" name="password" class="w-full p-2 border border-gray-400 rounded-sm focus:border-uds-blue focus:ring focus:ring-blue-200" required>
+                    </div>
+                    <button type="submit" class="btn-2000s w-full py-2 text-uds-blue rounded-md font-bold text-lg">
+                        Log In
+                    </button>
+                    <!-- Removed explicit password hint. Displaying username for testing, but not password. -->
+                    <p id="error-message" class="text-red-500 text-sm mt-3 text-center hidden">Invalid Username or Password.</p>
+                </form>
+            </div>
+        `;
+    }
+
+    // --- Controller Functions ---
+
+    function navigateTo(pageKey) {
+        currentPage = pageKey;
+        renderIntranet();
+    }
+    window.navigateTo = navigateTo;
+
+    function handleLogin(event) {
+        event.preventDefault();
+        const username = event.target.username.value;
+        const password = event.target.password.value;
+        const errorMessage = document.getElementById('error-message');
+
+        if (username === LOGIN_CREDENTIALS.username && password === LOGIN_CREDENTIALS.password) {
+            currentAuth = username;
+            sessionStorage.setItem('uds_auth', username);
+            
+            renderLoadingScreen();
+            
+            setTimeout(() => {
+                renderIntranet();
+            }, 2000);
+            
+        } else {
+            errorMessage.classList.remove('hidden');
+            console.error("Login failed: Invalid credentials.");
+        }
+    }
+
+    function handleLogout() {
+        currentAuth = null;
+        sessionStorage.removeItem('uds_auth');
+        renderLogin();
+    }
+
+    function checkAuthAndRender() {
+        currentAuth = sessionStorage.getItem('uds_auth');
+        if (currentAuth) {
+            renderIntranet();
+        } else {
+            renderLogin();
+        }
+    }
+
+    // Initialize the application when the script loads
+    checkAuthAndRender();
+</script>
+
+</body>
+</html>
